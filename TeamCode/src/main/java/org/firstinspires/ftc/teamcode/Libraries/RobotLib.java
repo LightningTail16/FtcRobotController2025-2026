@@ -1,4 +1,6 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Libraries;
+
+import static java.lang.Math.abs;
 
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -13,7 +15,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
@@ -22,7 +24,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import java.util.List;
 
 @SuppressWarnings("unused")
-public class MovementLib {
+public class RobotLib {
     public static class Vector2 {
         double x;
         double y;
@@ -85,11 +87,11 @@ public class MovementLib {
         private Boolean APRILTAG_ENABLED = false;
 
         public Robot(HardwareMap hardwareMap) {
+            this.hardwareMap = hardwareMap;
             this.Front_Right = hardwareMap.get(DcMotor.class, "frontright");
             this.Front_Left = hardwareMap.get(DcMotor.class, "frontleft");
             this.Back_Right = hardwareMap.get(DcMotor.class, "backright");
             this.Back_Left = hardwareMap.get(DcMotor.class, "backleft");
-            this.hardwareMap = hardwareMap;
         }
         public Robot enableOtos() {
             this.otos = this.hardwareMap.get(SparkFunOTOS.class, "sensor_otos");
@@ -169,8 +171,8 @@ public class MovementLib {
             double br = Forward + Right + Rotate;
 
             // normalize so no value exceeds 1
-            double max = Math.max(1.0, Math.max(Math.abs(fl),
-                    Math.max(Math.abs(fr), Math.max(Math.abs(bl), Math.abs(br)))));
+            double max = Math.max(1.0, Math.max(abs(fl),
+                    Math.max(abs(fr), Math.max(abs(bl), abs(br)))));
 
             fl /= max;
             fr /= max;
@@ -238,8 +240,8 @@ public class MovementLib {
         public void Omni_Move_To_Target(SparkFunOTOS.Pose2D target,double speed) {
             if(!OTOS_ENABLED) return;
             SparkFunOTOS.Pose2D pos = Get_Position();
-            double dx = 2 * (target.x - pos.x) / 10.0;
-            double dy = -2 * (target.y - pos.y) / 10.0;
+            double dx = 3 * (target.x - pos.x) / 5.0f;
+            double dy = -3 * (target.y - pos.y) / 5.0f;
             double dh = (target.h - pos.h) / 18.0;
             this.Omni_Move_Transformed(dx, dy, dh, pos.h * 0.01745329251, speed);
         }
@@ -248,8 +250,8 @@ public class MovementLib {
         }
         public double Distance_To(SparkFunOTOS.Pose2D target) {
             SparkFunOTOS.Pose2D pos = Get_Position();
-            double dx = 2 * (target.x - pos.x);
-            double dy = 2 * (target.y - pos.y);
+            double dx = (target.x - pos.x);
+            double dy = (target.y - pos.y);
             double dh = (target.h - pos.h) / 180.0;
             return Math.sqrt(dx*dx+dy*dy+dh*dh);
         }
@@ -269,8 +271,13 @@ public class MovementLib {
             Arm_Motor.setTargetPosition(0);
             Arm_Motor.setMode(DcMotorEx.RunMode.RUN_TO_POSITION);
         }
+        public void Arm_Glide_To(int tick) {
+        }
 
         // Imu functions
+        public void Reset_IMU() {
+            this.imu.resetYaw();
+        }
         public void PRM_Move(double localForward, double localRight, double RotateCC, double speed) {
             // Angle processing
             YawPitchRollAngles angles = this.imu.getRobotYawPitchRollAngles();
@@ -309,12 +316,16 @@ public class MovementLib {
                 telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
             }
         }
-        public void LookAtAprilTag() {
-            if(!currentDetections.isEmpty()) {
-                double target = currentDetections.get(0).center.x;
-                double turn = - (320 - target) / 320;
-                Omni_Move(0,0,turn);
+        public boolean LookAtAprilTag(int id, double offset) {
+            for (AprilTagDetection detection : currentDetections) {
+                if (detection.id == id) {
+                    double target = detection.ftcPose.bearing + offset;
+                    double turn =  (target - imu.getRobotAngularVelocity(AngleUnit.DEGREES).zRotationRate / 20.0) / 18.0;;
+                    Omni_Move(0,0,turn);
+                    return true;
+                }
             }
+            return false;
         }
         public SparkFunOTOS.Pose2D GetPositionBasedOnAprilTag() {
             for (AprilTagDetection detection : currentDetections) {

@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.TestingCode;
 
 import android.annotation.SuppressLint;
 
@@ -11,6 +11,7 @@ import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.firstinspires.ftc.teamcode.Libraries.RobotLib;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
@@ -29,7 +30,7 @@ public class AprilTagMovementWithController extends LinearOpMode {
     DcMotor Back_Left = null;
 
     SparkFunOTOS myOtos;
-    MovementLib.Robot robot = null;
+    RobotLib.Robot robot = null;
 
     // Unit conversion constants
     private static final double INCH_TO_M = 0.0254;
@@ -62,7 +63,7 @@ public class AprilTagMovementWithController extends LinearOpMode {
         myOtos.setAngularUnit(AngleUnit.DEGREES);
         myOtos.resetTracking();
 
-        robot = new MovementLib.Robot(Front_Right, Front_Left, Back_Right, Back_Left);
+        robot = new RobotLib.Robot(Front_Right, Front_Left, Back_Right, Back_Left);
         robot.Reverse_Left();
 
         myOtos.calibrateImu();

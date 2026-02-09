@@ -1,22 +1,25 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.MainCode;
 
 import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.teamcode.Libraries.RobotLib;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.List;
 
-@Autonomous(name="Autonomous Blue", group="Robot")
-public class AutonomousBlue extends LinearOpMode {
-    private final double SPINNER_VELOCITY = 1200;
+@Disabled
+@Autonomous(name="Autonomous Red", group="Robot")
+public class AutonomousRed extends LinearOpMode {
+    private final double SPINNER_VELOCITY = 1150;
 
     public DcMotorEx Arm = null;
     private DcMotorEx leftSpinner, rightSpinner;
@@ -26,13 +29,13 @@ public class AutonomousBlue extends LinearOpMode {
     private VisionPortal visionPortal;
 
     SparkFunOTOS myOtos;
-    MovementLib.Robot robot = null;
+    RobotLib.Robot robot = null;
 
 
     public void runOpMode() {
         initAprilTag();
 
-        robot = new MovementLib.Robot(hardwareMap);
+        robot = new RobotLib.Robot(hardwareMap);
 
         robot.Reverse_Left();
 
@@ -53,6 +56,8 @@ public class AutonomousBlue extends LinearOpMode {
 
         if (opModeIsActive()) {
 
+            int rotateCounter = 0;
+            int rotateCounterLimit = 100;
 
             robot.Omni_Move( 0.5, 0, 0, 1.0);
 
@@ -66,7 +71,7 @@ public class AutonomousBlue extends LinearOpMode {
             while (opModeIsActive()) {
                 AprilTagDetection detection = getFirstDetection();
                 if (detection != null && detection.metadata != null) {
-                    if (detection.metadata.id == 20){
+                    if (detection.metadata.id == 24){
                         double barring = detection.ftcPose.bearing;
                         double yaw = detection.ftcPose.yaw;
                         double Ydistance = detection.ftcPose.y;
@@ -95,8 +100,12 @@ public class AutonomousBlue extends LinearOpMode {
 
                 }else {
                     robot.Omni_Move(0, 0, RobotTurn, 1);
-                    sleep(150);
-                    RobotTurn += ((Math.abs(RobotTurn)+0.1)*(-Math.copySign(1, RobotTurn)));
+                    if (rotateCounter >= rotateCounterLimit){
+                        RobotTurn += ((Math.abs(RobotTurn)+0.1)*(-Math.copySign(1, RobotTurn)));
+                        rotateCounter = -1;
+                        rotateCounterLimit *= 2;
+                    }
+                    rotateCounter += 1;
                 }
                 robot.Omni_Move(0, 0, 0, 0);
             }
